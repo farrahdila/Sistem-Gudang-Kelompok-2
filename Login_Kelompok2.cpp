@@ -171,11 +171,36 @@ int main ()
                 switch (pilihanMenu)
                 {
                     case 1:
-                        clearScreen();
-                        cout << "--- [MENU 1] KELOLA STOK BARANG & VENDOR ---" << endl;
-                        cout << "[?] Aksi berhasil dimuat oleh Admin." << endl;
-                        kembaliKeMenu();
+                    {
+						int pilihanSubMenu;
+						int jumlahStokBarang;
+						string namaBarang;
+						
+						clearScreen();
+						
+						cout << "--- [MENU 1] KELOLA STOK BARANG & VENDOR ---" << endl;
+                        cout << "1. Tambahkan Stok Barang" << endl;
+                        cout << "2. Hapus Stok Barang" << endl;
+            			cout << "3. Menampilkan Stok Barang" << endl;
+            			cout << "Masukkan pilihan Anda (1-3): ";
+						cin >> pilihanSubMenu;
+                        
+						if (pilihanSubMenu == 1)
+						{
+							cout << "Mau Input Berapa Jenis Barang? : " << endl;
+							cin >> jumlahStokBarang;
+							
+							for (int i = 0; i < jumlahStokBarang; i++)
+							{
+								cout << "Input Nama Barang ke-" << i+1 << ": ";
+                    			cin >> namaBarang;
+							}
+							cout << "[?] Aksi berhasil dimuat oleh Admin." << endl;
+							kembaliKeMenu(); 
+						}
                         break;
+                    }
+                    
                     case 2:
                         clearScreen();
                         cout << "--- [MENU 2] CARI NAMA BARANG / SKU ---" << endl;
