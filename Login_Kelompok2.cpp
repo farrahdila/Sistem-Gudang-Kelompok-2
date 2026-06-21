@@ -40,7 +40,7 @@ int main ()
         {
             clearScreen();
             cout << "==========================================" << endl;
-            cout << "                SISTEM GUDANG              " << endl;
+            cout << "               STOCKIFY             " << endl;
             cout << "==========================================" << endl;
             cout << "1. Login ke Sistem" << endl;
             cout << "2. Daftar Akun Baru" << endl;
@@ -82,14 +82,14 @@ int main ()
                 
                 if (loginSukses)
                 {
-                    cout << "\n[?] Login Berhasil! Anda masuk sebagai " << roleUserAktif << "." << endl;
+                    cout << "\nLogin Berhasil! Anda masuk sebagai " << roleUserAktif << "." << endl;
                     cout << "Tekan ENTER untuk masuk ke Menu Utama...";
                     cin.ignore();
                     cin.get();
                 }
                 else
                 {
-                    cout << "\n[X] Username atau Password salah!" << endl;
+                    cout << "\nUsername atau Password salah!" << endl;
                     cout << "Tekan ENTER untuk mencoba lagi...";
                     cin.ignore();
                     cin.get();
@@ -100,7 +100,7 @@ int main ()
                 clearScreen();
                 if (jumlahAkun >= 10)
                 {
-                    cout << "[X] Memori database penuh! Tidak bisa menambah akun lagi." << endl;
+                    cout << "Memori database penuh! Tidak bisa menambah akun lagi." << endl;
                     kembaliKeMenu();
                     continue; 
                 }
@@ -123,7 +123,7 @@ int main ()
                 databaseAkun[jumlahAkun].role = newRole;
                 jumlahAkun++;
                 
-                cout << "\n[?] Akun berhasil didaftarkan!" << endl;
+                cout << "\nAkun berhasil didaftarkan!" << endl;
                 cout << "Silahkan gunakan akun tersebut untuk login." << endl;
                 cout << "Tekan ENTER untuk kembali...";
                 cin.ignore();
@@ -147,7 +147,7 @@ int main ()
             
             if (roleUserAktif == "ADMIN") 
             {
-                cout << "1. Kelola Stok Barang & Vendor (CRUD)" << endl;
+                cout << "1. Kelola Stok Barang & Vendor" << endl;
                 cout << "2. Cari Barang / Kode SKU" << endl;
                 cout << "3. Log Masuk-Keluar (Real-time)" << endl;
                 cout << "4. Cetak Barcode & Laporan" << endl;
