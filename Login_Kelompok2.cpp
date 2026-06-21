@@ -173,9 +173,6 @@ int main ()
                     case 1:
                     {
 						int pilihanSubMenu;
-						int jumlahStokBarang;
-						string namaBarang;
-						
 						clearScreen();
 						
 						cout << "--- [MENU 1] KELOLA STOK BARANG & VENDOR ---" << endl;
@@ -187,26 +184,95 @@ int main ()
                         
 						if (pilihanSubMenu == 1)
 						{
+							clearscreen();
+							int jumlahInput;
 							cout << "Mau Input Berapa Jenis Barang? : " << endl;
-							cin >> jumlahStokBarang;
+							cin >> jumlahInput;
 							
-							for (int i = 0; i < jumlahStokBarang; i++)
+							for (int i = 0; i < jumlahInput; i++)
 							{
-								cout << "Input Nama Barang ke-" << i+1 << ": ";
-                    			cin >> namaBarang;
+								if (jumlahBarang >= 30)
+								{
+									cout << "Gudang penuh, tidak bisa menambah barang lagi!" << endl;
+                                    break;
+								}
+								cout << "\n--- Data Barang ke-" << i+1 << " ---" << endl;
+                                cout << "Masukkan Kode SKU   : "; cin >> databaseBarang[jumlahBarang].sku;
+                                cout << "Masukkan Nama Barang: "; cin >> databaseBarang[jumlahBarang].nama;
+                                cout << "Masukkan Jumlah Stok: "; cin >> databaseBarang[jumlahBarang].stok;
+                                jumlahBarang++;
 							}
 							cout << "[?] Aksi berhasil dimuat oleh Admin." << endl;
 							kembaliKeMenu(); 
 						}
+                         else if (pilihanSubMenu == 2)
+                        {
+                            clearScreen();
+                            string targetSku;
+                            cout << "Masukkan Kode SKU barang yang ingin didelete: ";
+                            cin >> targetSku;
+                            
+                            bool ditemukan = false;
+                            for (int i = 0; i < jumlahBarang; i++) {
+                                if (databaseBarang[i].sku == targetSku) {
+                                    for (int j = i; j < jumlahBarang - 1; j++) {
+                                        databaseBarang[j] = databaseBarang[j + 1];
+                                    }
+                                    jumlahBarang--;
+                                    ditemukan = true;
+                                    cout << "\nBarang dengan SKU " << targetSku << " berhasil dihapus dari sistem." << endl;
+                                    break;
+                                }
+                            }
+                            if (!ditemukan) {
+                                cout << "\nKode SKU tidak ditemukan!" << endl;
+                            }
+                            kembaliKeMenu();
+                        }
+						else if (pilihanSubMenu == 3)
+                        {
+                            clearScreen();
+                            cout << "===================================================\n";
+                            cout << "KODE SKU\tNAMA BARANG\t\tJUMLAH STOK\n";
+                            cout << "===================================================\n";
+                            if (jumlahBarang == 0) {
+                                cout << "\t\t--- Gudang Kosong ---\n";
+                            } else {
+                                for (int i = 0; i < jumlahBarang; i++) {
+                                    cout << databaseBarang[i].sku << "\t\t" << databaseBarang[i].nama << "\t\t" << databaseBarang[i].stok << " Unit\n";
+                                }
+                            }
+                            cout << "===================================================\n";
+                            kembaliKeMenu();
+                        }
                         break;
                     }
                     
                     case 2:
+                        {
                         clearScreen();
-                        cout << "--- [MENU 2] CARI NAMA BARANG / SKU ---" << endl;
-                        cout << "[?] Menampilkan Data Pencarian Barang..." << endl;
+                        string kataKunci;
+                        cout << "--- [MENU 2] CARI NAMA BARANG / SKU (ADMIN) ---" << endl;
+                        cout << "Masukkan Kode SKU yang dicari: ";
+                        cin >> kataKunci;
+                        
+                        bool ketemu = false;
+                        for (int i = 0; i < jumlahBarang; i++) {
+                            if (databaseBarang[i].sku == kataKunci) {
+                                cout << "\nDATA BARANG DITEMUKAN!" << endl;
+                                cout << "Kode SKU    : " << databaseBarang[i].sku << endl;
+                                cout << "Nama Barang : " << databaseBarang[i].nama << endl;
+                                cout << "Sisa Stok   : " << databaseBarang[i].stok << " Unit" << endl;
+                                ketemu = true;
+                                break;
+                            }
+                        }
+                        if (!ketemu) {
+                            cout << "\nBarang dengan SKU '" << kataKunci << "' tidak ada di gudang." << endl;
+                        }
                         kembaliKeMenu();
                         break;
+                    }
                     case 3:
                         clearScreen();
                         cout << "--- [MENU 3] LOG TRANSAKSI REAL-TIME ---" << endl;
@@ -240,11 +306,30 @@ int main ()
                 switch (pilihanMenu)
                 {
                     case 1:
+                         {
                         clearScreen();
-                        cout << "--- [MENU 1] CARI NAMA BARANG / SKU ---" << endl;
-                        cout << "[?] Menampilkan Data Pencarian Barang..." << endl;
+                        string kataKunci;
+                        cout << "--- [MENU 1] CARI NAMA BARANG / SKU (STAFF) ---" << endl;
+                        cout << "Masukkan Kode SKU yang dicari: ";
+                        cin >> kataKunci;
+                        
+                        bool ketemu = false;
+                        for (int i = 0; i < jumlahBarang; i++) {
+                            if (databaseBarang[i].sku == kataKunci) {
+                                cout << "\n[?] DATA BARANG DITEMUKAN!" << endl;
+                                cout << "Kode SKU    : " << databaseBarang[i].sku << endl;
+                                cout << "Nama Barang : " << databaseBarang[i].nama << endl;
+                                cout << "Sisa Stok   : " << databaseBarang[i].stok << " Unit" << endl;
+                                ketemu = true;
+                                break;
+                            }
+                        }
+                        if (!ketemu) {
+                            cout << "\n[X] Barang dengan SKU '" << kataKunci << "' tidak ada di gudang." << endl;
+                        }
                         kembaliKeMenu();
                         break;
+                    }
                     case 2:
                         clearScreen();
                         cout << "--- [MENU 2] LOG TRANSAKSI REAL-TIME ---" << endl;
