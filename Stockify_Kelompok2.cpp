@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <ctime>
+#include <iomanip>
 
 using namespace std;
 
@@ -206,9 +208,55 @@ int main ()
                         if (pilihanSubMenu == 1)
                         {
                             clearScreen();
-                            int jumlahInput;
-                            cout << "Mau Input Berapa Jenis Barang? : ";
-                            cin >> jumlahInput;
+                            
+                            //======================
+                            // IDENTITAS LAPORAN
+                            //======================
+                            
+                            string noLaporan;
+                            string penanggungJawab;
+                            
+                            time_t sekarang = time(0);
+                            tm *waktu = localtime(&sekarang);
+                            
+                            cout << "================================" << endl;
+                            cout << "     FORM INPUT DATA BARANG     " << endl;
+                            cout << "================================" << endl;
+                            
+                            cout << "No. Laporan      : ";
+                            cin >> noLaporan;
+                            
+                            cout << "Penanggung Jawab : ";
+                            cin.ignore();
+                            getline(cin, penanggungJawab);
+                            
+                            cout << "Tanggal Akses    : "
+                                 << setw(2) << setfill('0') << waktu->tm_mday << "-"
+                                 << setw(2) << waktu->tm_mon + 1 << "-"
+                                 << waktu->tm_year + 1900 << endl;
+                                 
+                                 cout << "================================" << endl;
+                                 
+                                 int jumlahInput;
+                                 cout << "\nMau Input Berapa Jenis Barang? : ";
+                           		 cin >> jumlahInput;
+                           		 
+                           		 if (jumlahLog < 100)
+                           		{
+                           		 	databaseLog[jumlahLog++].infoLog =
+                           		 	"Input Barang | No Laporan: " + noLaporan +
+                           		 	" | PJ: "; penanggungJawab; 
+                           		 	
+                           		 	string tanggal = 
+                           		 	to_string(waktu->tm_mday) + "-" +
+                           		 	to_string(waktu->tm_mon + 1) + "-" +
+                           		 	to_string(waktu->tm_year + 1900);
+                           		 	
+                           		 	databaseLog[jumlahLog++].infoLog = 
+                           		 	"Input Barang | No Laporan: " + noLaporan +
+                           		 	" | PJ: " + penanggungJawab +
+                           		 	" | Tanggal: " + tanggal;
+								}
                             
                             for (int i = 0; i < jumlahInput; i++)
                             {
