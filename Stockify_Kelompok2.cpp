@@ -5,7 +5,6 @@
 #include <iomanip>
 
 using namespace std;
-const long HARGA_SATUAN = 120000;
 
 struct Pengguna 
 {
@@ -18,11 +17,13 @@ struct Barang {
     string sku;
     string nama;
     int stok;
-	long harga;
+    long harga;      
+    long harga_jual; 
 };
 
-struct LogTransaksi {
-	string infoLog;
+struct LogTransaksi 
+{
+    string infoLog;
 };
 
 void clearScreen()
@@ -36,9 +37,75 @@ void clearScreen()
 
 void kembaliKeMenu()
 {
-    cout << "\nTekan ENTER untuk kembali ke menu utama . . . ";
+    cout << "\nTekan ENTER untuk kembali . . . ";
     cin.ignore();
     cin.get();
+}
+
+string ambilBagian(string &teks, string pembatas) 
+{
+    size_t pos = teks.find(pembatas);
+    string hasil = "";
+    if (pos != string::npos) 
+	{
+        hasil = teks.substr(0, pos);
+        teks.erase(0, pos + pembatas.length());
+    } else 
+	{
+        hasil = teks;
+        teks = "";
+    }
+    
+    if(!hasil.empty()) {
+        size_t first = hasil.find_first_not_of(' ');
+        size_t last = hasil.find_last_not_of(' ');
+        if (first != string::npos && last != string::npos) 
+		{
+            hasil = hasil.substr(first, (last - first + 1));
+        }
+    }
+    return hasil;
+}
+
+void tampilkanLogRapi(LogTransaksi databaseLog[], int jumlahLog) 
+{
+    cout << "=========================================================================================\n";
+    cout << left << setw(4) << "NO" 
+         << "| " << setw(10) << "JENIS" 
+         << "| " << setw(30) << "AKTIVITAS / KETERANGAN" 
+         << "| " << setw(12) << "JUMLAH" 
+         << "| " << setw(15) << "NILAI (IDR)" << "\n";
+    cout << "=========================================================================================\n";
+    
+    if (jumlahLog == 0) 
+	{
+        cout << setw(89) << left << "                      [ Belum ada aktivitas transaksi terdaftar ]" << "\n";
+    } else {
+        for (int i = 0; i < jumlahLog; i++) 
+		{
+            string s = databaseLog[i].infoLog;
+            
+            if (s.find("|") != string::npos) 
+			{
+                string jenis = ambilBagian(s, "|");
+                string ket = ambilBagian(s, "|");
+                string qty = ambilBagian(s, "|");
+                string harga = ambilBagian(s, "|");
+                
+                cout << left << setw(4) << (i + 1)
+                     << "| " << setw(10) << jenis
+                     << "| " << setw(30) << ket
+                     << "| " << setw(12) << qty
+                     << "| " << setw(15) << harga << "\n";
+            } else 
+			{
+                cout << left << setw(4) << (i + 1)
+                     << "| " << setw(10) << "INFO" 
+                     << "| " << setw(71) << s << "\n";
+            }
+        }
+    }
+    cout << "=========================================================================================\n";
 }
 
 int main ()
@@ -52,6 +119,8 @@ int main ()
     LogTransaksi databaseLog[100];
     int jumlahLog = 0;
     
+    databaseAkun[jumlahAkun++] = {"admin", "admin123", "ADMIN"};
+    databaseAkun[jumlahAkun++] = {"staff gudang", "staff123", "STAFF"};
     
     while (true)
     {
@@ -79,18 +148,14 @@ int main ()
                 {
                     cout << "[!] PEMBERITAHUAN [!]" << endl;
                     cout << "Belum ada akun yang terdaftar di sistem." << endl;
-                    cout << "Silahkan kembali dan pilih menu 'Daftar Akun Baru' terlebih dahulu." << endl;
-                    
-                    cout << "\nTekan ENTER untuk kembali. . .";
-                    cin.ignore();
-                    cin.get();
+                    kembaliKeMenu();
                     continue; 
                 }
                 
                 string inputUser, inputPass;
                 cout << "--- HALAMAN LOGIN ---" << endl;
-                cout << "Username : "; cin >> inputUser; 
-                cout << "Password : "; cin >> inputPass; 
+                cout << "Username : "; cin.ignore(); getline(cin, inputUser); 
+                cout << "Password : "; getline(cin, inputPass); 
                 
                 for (int i = 0; i < jumlahAkun; i++)
                 {
@@ -106,14 +171,12 @@ int main ()
                 {
                     cout << "\nLogin Berhasil! Anda masuk sebagai " << roleUserAktif << "." << endl;
                     cout << "Tekan ENTER untuk masuk ke Menu Utama...";
-                    cin.ignore();
                     cin.get();
                 }
                 else
                 {
                     cout << "\nUsername atau Password salah!" << endl;
                     cout << "Tekan ENTER untuk mencoba lagi...";
-                    cin.ignore();
                     cin.get();
                 }
             }
@@ -131,10 +194,9 @@ int main ()
                 int pilihanRole;
                 
                 cout << "--- PENDAFTARAN AKUN BARU ---" << endl;
-                cout << "Masukkan Username Baru : ";
-                cin >> newUser; 
-                cout << "Masukkan Password Baru : ";
-                cin >> newPass;
+                cout << "Masukkan Username Baru : "; cin.ignore(); getline(cin, newUser); 
+                cout << "Masukkan Password Baru : "; getline(cin, newPass); 
+                
                 cout << "Pilih Hak Akses (Role): \n1. ADMIN\n2. STAFF GUDANG\nPilihan (1-2): "; 
                 cin >> pilihanRole;
                 
@@ -188,13 +250,12 @@ int main ()
             
             if (roleUserAktif == "ADMIN") 
             {
-            	switch (pilihanMenu)
+                switch (pilihanMenu)
                 {
                     case 1:
                     {
                         int pilihanSubMenu;
                         clearScreen();
-                        
                         cout << "--- [MENU 1] KELOLA STOK BARANG (CRUD) ---" << endl;
                         cout << "1. Tambahkan Stok Barang Baru" << endl;
                         cout << "2. Pengambilan Barang oleh Vendor" << endl;
@@ -206,345 +267,302 @@ int main ()
                         if (pilihanSubMenu == 1)
                         {
                             clearScreen();
-                            
-                            //======================
-                            // IDENTITAS LAPORAN
-                            //======================
-                            
-                            string noLaporan;
-                            string penanggungJawab;
-                            
+                            if (jumlahBarang >= 30) 
+							{
+                                cout << "Gudang penuh, tidak bisa menambah barang lagi!" << endl;
+                                kembaliKeMenu();
+                                break;
+                            }
+
+                            string noLaporan, penanggungJawab;
                             time_t sekarang = time(0);
                             tm *waktu = localtime(&sekarang);
                             
                             cout << "================================" << endl;
                             cout << "     FORM INPUT DATA BARANG     " << endl;
                             cout << "================================" << endl;
+                            cout << "No. Laporan      : "; cin >> noLaporan;
+                            cout << "Penanggung Jawab : "; cin.ignore(); getline(cin, penanggungJawab);
                             
-                            cout << "No. Laporan      : ";
-                            cin >> noLaporan;
-                            
-                            cout << "Penanggung Jawab : ";
-                            cin.ignore();
-                            getline(cin, penanggungJawab);
-                            
-                            cout << "Tanggal Akses    : "
-                                 << setw(2) << setfill('0') << waktu->tm_mday << "-"
-                                 << setw(2) << waktu->tm_mon + 1 << "-"
-                                 << waktu->tm_year + 1900 << endl;
-                                 
-                                 cout << "================================" << endl;
-                        			
-                           		 if (jumlahLog < 100)
-                           		{
-                           		 	
-                           		 	string tanggal = 
-                           		 	to_string(waktu->tm_mday) + "-" +
-                           		 	to_string(waktu->tm_mon + 1) + "-" +
-                           		 	to_string(waktu->tm_year + 1900);
-                           		 	
-                           		 	databaseLog[jumlahLog++].infoLog = 
-                           		 	"Input Barang | No Laporan: " + noLaporan +
-                           		 	" | PJ: " + penanggungJawab +
-                           		 	" | Tanggal: " + tanggal;
-								}
-                        
-                                if (jumlahBarang >= 30) {
-                                    cout << "Gudang penuh, tidak bisa menambah barang lagi!" << endl;
-                                    break;
-                                }
-                               
-                                cout << "Masukkan Kode SKU   : "; cin >> databaseBarang[jumlahBarang].sku;
-								cout << "Masukkan Nama Barang: "; cin >> databaseBarang[jumlahBarang].nama;
-								cout << "Masukkan Jumlah Stok: "; cin >> databaseBarang[jumlahBarang].stok;
-								cout << "Masukkan Harga Modal: "; cin >> databaseBarang[jumlahBarang].harga; // Input harga
-								
-								string info = "MASUK    | Tambah Stok | " + to_string(databaseBarang[jumlahBarang].stok) + 
-								              " unit | Rp" + to_string(databaseBarang[jumlahBarang].harga * databaseBarang[jumlahBarang].stok);
-								databaseLog[jumlahLog++].infoLog = info;
-							
-                                if (jumlahLog < 100) {
-						            string tanggal = to_string(waktu->tm_mday) + "-" + to_string(waktu->tm_mon + 1) + "-" + to_string(waktu->tm_year + 1900);
-						            databaseLog[jumlahLog++].infoLog = "Input Barang | No Laporan: " + noLaporan + " | PJ: " + penanggungJawab + " | Tanggal: " + tanggal;
-						            databaseLog[jumlahLog++].infoLog = "Admin menambah barang baru: " + databaseBarang[jumlahBarang].nama + " (SKU: " + databaseBarang[jumlahBarang].sku + ") sebanyak " + to_string(databaseBarang[jumlahBarang].stok) + " unit.";
-						       	 }
-								
-							jumlahBarang++;
-                            cout << "\nAksi berhasil dimuat oleh Admin." << endl;
+                            string tanggal = to_string(waktu->tm_mday) + "-" + to_string(waktu->tm_mon + 1) + "-" + to_string(waktu->tm_year + 1900);
+                            cout << "Tanggal Akses    : " << tanggal << endl;
+                            cout << "================================" << endl;
+                                
+                            cout << "Masukkan Kode SKU   : "; cin >> databaseBarang[jumlahBarang].sku;
+                            cout << "Masukkan Nama Barang: "; cin.ignore(); getline(cin, databaseBarang[jumlahBarang].nama);
+                            cout << "Masukkan Jumlah Stok: "; cin >> databaseBarang[jumlahBarang].stok;
+                            cout << "Masukkan Harga Modal: "; cin >> databaseBarang[jumlahBarang].harga;
+                            cout << "Masukkan Harga Jual : "; cin >> databaseBarang[jumlahBarang].harga_jual;
+                                
+                            if (jumlahLog < 98) {
+                                databaseLog[jumlahLog++].infoLog = "MASUK | Tambah Stok " + databaseBarang[jumlahBarang].nama + " | " + to_string(databaseBarang[jumlahBarang].stok) + " unit | Rp" + to_string(databaseBarang[jumlahBarang].harga * databaseBarang[jumlahBarang].stok);
+                                databaseLog[jumlahLog++].infoLog = "No Laporan: " + noLaporan + " , PJ: " + penanggungJawab + " , Tgl: " + tanggal;
+                            }
+                                
+                            jumlahBarang++;
+                            cout << "\nBarang berhasil ditambahkan oleh Admin." << endl;
                             kembaliKeMenu(); 
                         }
                         else if (pilihanSubMenu == 2)
                         {
-								clearScreen();
-								string namaVendor;
-								string jumlahInput;
-							    int jumlahAmbil;
-							
-							    cout << "--- [MENU 2] PENGAMBILAN BARANG OLEH VENDOR ---" << endl;
-							    
-							    if (jumlahBarang == 0) {
-							        cout << "Stok gudang kosong, tidak ada barang yang bisa diambil." << endl;
-							    } else {
-							        cout << "Nama Barang yang tersedia : " << databaseBarang[0].nama << endl;
-							        cout << "Stok saat ini             : " << databaseBarang[0].stok << " Unit" << endl;
-							        cout << "------------------------------------------" << endl;
-							        
-							        cout << "Masukkan Nama Vendor      : "; 
-							        cin.ignore(); 
-							        getline(cin, namaVendor);
-							        
-							        cout << "Masukkan Jumlah Diambil   : "; 
-							        cin >> jumlahAmbil;
-							
-							        if (jumlahAmbil > databaseBarang[0].stok) {
-							            cout << "\n[!] Gagal! Stok tidak mencukupi." << endl;
-							        } else if (jumlahAmbil <= 0) {
-							            cout << "\n[!] Jumlah pengambilan tidak valid." << endl;
-							        } else {
-							            // Update stok
-							            databaseBarang[0].stok -= jumlahAmbil;
-							
-							            // Catat ke Log
-							            if (jumlahLog < 100) {
-							                databaseLog[jumlahLog++].infoLog = "Vendor " + namaVendor + " mengambil " + 
-							                    to_string(jumlahAmbil) + " unit " + databaseBarang[0].nama + ". Sisa stok: " + 
-							                    to_string(databaseBarang[0].stok);
-							            }
-							            
-							            cout << "\nBerhasil! Pengambilan oleh vendor " << namaVendor << " telah dicatat." << endl;
-							            cout << "Sisa stok sekarang: " << databaseBarang[0].stok << " Unit." << endl;
-							        } long totalHarga = (long)jumlahAmbil * 120000;
-									databaseLog[jumlahLog++].infoLog = "[KELUAR] | Vendor " + namaVendor + " | " + to_string(jumlahAmbil) + " unit | Rp" + to_string(totalHarga);
-							    }
-							    kembaliKeMenu();
-							    break;
-							}
-                        else if (pilihanSubMenu == 3)
-				        {
-				            clearScreen();
-				            string targetSku;
-				            cout << "--- UPDATE DATA BARANG ---" << endl;
-				            cout << "Masukkan Kode SKU barang yang ingin diupdate: ";
-				            cin >> targetSku;
-				            
-				            bool ditemukan = false;
-				            for (int i = 0; i < jumlahBarang; i++) {
-				                if (databaseBarang[i].sku == targetSku) {
-				                    ditemukan = true;
-				                    
-				                    cout << "\n[Data Lama Barang]" << endl;
-				                    cout << "Nama Barang : " << databaseBarang[i].nama << endl;
-				                    cout << "Stok Lama   : " << databaseBarang[i].stok << endl;
-				                    cout << "------------------------------------------" << endl;
-				                    
-				                    // Input data baru
-				                    string namaBaru;
-				                    int stokBaru;
-				                    cout << "Masukkan Nama Barang Baru : "; cin >> namaBaru;
-				                    cout << "Masukkan Jumlah Stok Baru : "; cin >> stokBaru;
-				                    
-				                    // Catat riwayat ke log sebelum data diubah
-				                    if (jumlahLog < 100) {
-				                        databaseLog[jumlahLog++].infoLog = "Admin mengubah barang SKU " + targetSku + ": " + databaseBarang[i].nama + " -> " + namaBaru + ", Stok " + to_string(databaseBarang[i].stok) + " -> " + to_string(stokBaru);
-				                    }
-				                    
-				                    // Proses update ke database array
-				                    databaseBarang[i].nama = namaBaru;
-				                    databaseBarang[i].stok = stokBaru;
-				                    
-				                    cout << "\nData barang dengan SKU " << targetSku << " berhasil diperbarui!" << endl;
-				                    break;
-				                } 	
-				            }
-				            if (!ditemukan) {
-				                cout << "\nKode SKU tidak ditemukan! Gagal update data." << endl;
-				            }
-				            kembaliKeMenu();
-				        }
-				       
-						else if (pilihanSubMenu == 4)
-                        {
                             clearScreen();
-                            cout << "===================================================\n";
-                            cout << "KODE SKU\tNAMA BARANG\t\tJUMLAH STOK\n";
-                            cout << "===================================================\n";
-                            if (jumlahBarang == 0) {
-                                cout << "\t\t--- Gudang Kosong ---\n";
+                            cout << "--- [MENU 2] PENGAMBILAN BARANG OLEH VENDOR ---" << endl;
+                            if (jumlahBarang == 0) 
+							{
+                                cout << "Stok gudang kosong, tidak ada barang yang bisa diambil." << endl;
                             } else {
-                                for (int i = 0; i < jumlahBarang; i++) {
-                                    cout << databaseBarang[i].sku << "\t\t" << databaseBarang[i].nama << "\t\t" << databaseBarang[i].stok << " Unit\n";
+                                string targetSku, namaVendor;
+                                int jumlahAmbil;
+                                
+                                cout << "Masukkan Kode SKU Barang yang akan diambil: "; cin >> targetSku;
+                                
+                                int idx = -1;
+                                for(int i=0; i<jumlahBarang; i++) 
+								{
+                                    if(databaseBarang[i].sku == targetSku) { idx = i; break; }
+                                }
+                                
+                                if(idx == -1) {
+                                    cout << "[!] Barang dengan SKU tersebut tidak ditemukan!" << endl;
+                                } else {
+                                    cout << "Nama Barang   : " << databaseBarang[idx].nama << endl;
+                                    cout << "Stok Saat Ini : " << databaseBarang[idx].stok << " Unit" << endl;
+                                    cout << "Harga Jual    : Rp" << databaseBarang[idx].harga_jual << endl;
+                                    cout << "------------------------------------------" << endl;
+                                    cout << "Masukkan Nama Vendor    : "; cin.ignore(); getline(cin, namaVendor);
+                                    cout << "Masukkan Jumlah Diambil : "; cin >> jumlahAmbil;
+                                    
+                                    if (jumlahAmbil > databaseBarang[idx].stok) 
+									{
+                                        cout << "\n[!] Gagal! Stok tidak mencukupi." << endl;
+                                    } else if (jumlahAmbil <= 0) {
+                                        cout << "\n[!] Jumlah pengambilan tidak valid." << endl;
+                                    } else {
+                                        databaseBarang[idx].stok -= jumlahAmbil;
+                                        long totalHargaJual = (long)jumlahAmbil * databaseBarang[idx].harga_jual; 
+                                        
+                                        if (jumlahLog < 100) {
+                                            databaseLog[jumlahLog++].infoLog = "KELUAR | Vendor " + namaVendor + " | " + to_string(jumlahAmbil) + " unit | Rp" + to_string(totalHargaJual);
+                                        }
+                                        cout << "\nBerhasil! Pengambilan dicatat. Sisa stok: " << databaseBarang[idx].stok << " Unit." << endl;
+                                    }
                                 }
                             }
-                            cout << "===================================================\n";
+                            kembaliKeMenu();
+                        }
+                        else if (pilihanSubMenu == 3)
+                        {
+                            clearScreen();
+                            string targetSku;
+                            cout << "--- UPDATE DATA BARANG ---" << endl;
+                            cout << "Masukkan Kode SKU barang yang ingin diupdate: "; cin >> targetSku;
+                            
+                            bool ditemukan = false;
+                            for (int i = 0; i < jumlahBarang; i++) 
+							{
+                                if (databaseBarang[i].sku == targetSku) 
+								{
+                                    ditemukan = true;
+                                    cout << "\n[Data Lama Barang]" << endl;
+                                    cout << "Nama Barang : " << databaseBarang[i].nama << endl;
+                                    cout << "Stok Lama   : " << databaseBarang[i].stok << endl;
+                                    cout << "------------------------------------------" << endl;
+                                    
+                                    string namaBaru; int stokBaru;
+                                    long modalBaru, jualBaru;
+                                    cout << "Masukkan Nama Barang Baru : "; cin.ignore(); getline(cin, namaBaru);
+                                    cout << "Masukkan Jumlah Stok Baru : "; cin >> stokBaru;
+                                    cout << "Masukkan Harga Modal Baru : "; cin >> modalBaru;
+                                    cout << "Masukkan Harga Jual Baru  : "; cin >> jualBaru;
+                                    
+                                    if (jumlahLog < 100) 
+									{
+                                        databaseLog[jumlahLog++].infoLog = "Update Barang SKU " + targetSku + ": " + databaseBarang[i].nama + " -> " + namaBaru;
+                                    }
+                                    databaseBarang[i].nama = namaBaru;
+                                    databaseBarang[i].stok = stokBaru;
+                                    databaseBarang[i].harga = modalBaru;
+                                    databaseBarang[i].harga_jual = jualBaru;
+                                    cout << "\nData barang berhasil diperbarui!" << endl;
+                                    break;
+                                } 	
+                            }
+                            if (!ditemukan) cout << "\nKode SKU tidak ditemukan!" << endl;
+                            kembaliKeMenu();
+                        }
+                        else if (pilihanSubMenu == 4)
+                        {
+                            clearScreen();
+                            cout << "========================================================================================\n";
+                            cout << left << setw(4) << "NO"
+                                 << "| " << setw(12) << "KODE SKU" 
+                                 << "| " << setw(25) << "NAMA BARANG" 
+                                 << "| " << setw(15) << "JUMLAH STOK" 
+                                 << "| " << setw(12) << "MODAL" 
+                                 << "| " << setw(12) << "JUAL" << "\n";
+                            cout << "========================================================================================\n";
+                            
+                            if (jumlahBarang == 0) 
+							{
+                                cout << "                           --- Data Stok Gudang Masih Kosong ---\n";
+                            } else {
+                                for (int i = 0; i < jumlahBarang; i++) {
+                                    cout << left << setw(4) << (i + 1) << "| "
+                                         << setw(12) << databaseBarang[i].sku << "| "
+                                         << setw(25) << databaseBarang[i].nama << "| "
+                                         << setw(15) << (to_string(databaseBarang[i].stok) + " Unit") << "| "
+                                         << "Rp" << setw(10) << databaseBarang[i].harga << "| "
+                                         << "Rp" << setw(10) << databaseBarang[i].harga_jual << "\n";
+                                }
+                            }
+                            cout << "========================================================================================\n";
                             kembaliKeMenu();
                         }
                         break;
                     }
                     
-					case 2:
-					{
-					  clearScreen();
-				        cout << "==========================================================" << endl;
-				        cout << "NO | JENIS    | KETERANGAN         | HARGA (MASUK/KELUAR)" << endl;
-				        cout << "==========================================================" << endl;
-				        
-				        long totalPemasukan = 0;
-				        long totalPengeluaran = 0;
-				        int nomor = 1;
-				        
-				        for (int i = 0; i < jumlahLog; i++) {
-				            // Kita filter: Hanya tampilkan jika log mengandung "Rp"
-				            if (databaseLog[i].infoLog.find("Rp") != string::npos) {
-				                cout << setw(2) << nomor++ << " | " << databaseLog[i].infoLog << endl;
-				                
-				                // Kalkulasi totalan
-				                size_t pos = databaseLog[i].infoLog.find("Rp");
-				                long nilai = stol(databaseLog[i].infoLog.substr(pos + 2));
-				                
-				                if (databaseLog[i].infoLog.find("MASUK") != string::npos) {
-				                    totalPengeluaran += nilai; // Harga barang masuk dianggap biaya/pengeluaran
-				                } else if (databaseLog[i].infoLog.find("KELUAR") != string::npos) {
-				                    totalPemasukan += nilai;   // Harga barang keluar dianggap pemasukan
-				                }
-				            }
-				        }
-				        
-				        cout << "==========================================================" << endl;
-				        cout << "TOTAL HARGA BARANG MASUK  : Rp" << totalPengeluaran << endl;
-				        cout << "TOTAL HARGA BARANG KELUAR : Rp" << totalPemasukan << endl;
-				        cout << "----------------------------------------------------------" << endl;
-				        cout << "SALDO/KEUNTUNGAN (Estimasi): Rp" << (totalPemasukan - totalPengeluaran) << endl;
-				    
-				    kembaliKeMenu();
-				    break;
-					}
-				    
-					case 3:
+                    case 2:
                     {
-                    	clearScreen();
-                        cout << "--- [MENU 3] LOG RIWAYAT TRANSAKSI REAL-TIME (ADMIN) ---" << endl;
+                        clearScreen();
+                        cout << "==========================================================" << endl;
+                        cout << "NO | JENIS    | KETERANGAN         | HARGA (MASUK/KELUAR)" << endl;
+                        cout << "==========================================================" << endl;
                         
-                        if (jumlahLog == 0) {
-                        	cout << "[Belum ada aktivitas transaksi terdaftar]" << endl;
-						} else {
-							for (int i = 0; i < jumlahLog; i++) {
-                                cout << "[" << i+1 << "] " << databaseLog[i].infoLog << endl;
-							}
-						}
-                        cout << "========================================================";
-						kembaliKeMenu();
+                        long totalPemasukan = 0, totalPengeluaran = 0;
+                        int nomor = 1;
+                        
+                        for (int i = 0; i < jumlahLog; i++) 
+						{
+                            if (databaseLog[i].infoLog.find("Rp") != string::npos)
+							{
+                                string sTemp = databaseLog[i].infoLog;
+                                size_t posBaris = sTemp.find("Rp");
+                                long nilai = stol(sTemp.substr(posBaris + 2));
+                                
+                                cout << setw(2) << nomor++ << " | " << databaseLog[i].infoLog << endl;
+                                
+                                if (sTemp.find("MASUK") != string::npos) 
+								{
+                                    totalPengeluaran += nilai;
+                                } else if (sTemp.find("KELUAR") != string::npos) 
+								{
+                                    totalPemasukan += nilai;
+                                }
+                            }
+                        }
+                        cout << "==========================================================" << endl;
+                        cout << "TOTAL MODAL BARANG MASUK  : Rp" << totalPengeluaran << endl;
+                        cout << "TOTAL OMSET BARANG KELUAR : Rp" << totalPemasukan << endl;
+                        cout << "----------------------------------------------------------" << endl;
+                        cout << "SALDO/KEUNTUNGAN BERSIH    : Rp" << (totalPemasukan - totalPengeluaran) << endl;
+                        kembaliKeMenu();
                         break;
-					 } 
-				
-                    case 4:      
-					{
-					    clearScreen();
-					    cout << "--- [MENU 4] PRINT BARCODE & LAPORAN ---" << endl;
-					    
-					    if (jumlahBarang == 0) {
-					        cout << "[X] Gudang kosong! Tidak ada barang untuk dicetak barcodenya." << endl;
-					    } 
-					    else {
-						    string cariSku;
-						    cout << "Masukkan kode SKU barang yang ingin dicetak Barcodenya: ";
-						    cin >> cariSku;
-						        
-						    bool ketemuSku = false;
-						
-						    for (int i = 0; i < jumlahBarang; i++) 
-						    {
-						        if (databaseBarang[i].sku == cariSku) 
-						        {
-						            ketemuSku = true;
-						                
-						            cout << "\n==========================================" << endl;
-						            cout << "        HASIL GENERATE BARCODE            " << endl;
-						            cout << "==========================================" << endl;
-						            cout << " Nama Barang : " << databaseBarang[i].nama << endl;
-						            cout << " Kode SKU    : " << databaseBarang[i].sku << endl;
-						            cout << " Tampilan Barcode: " << endl << endl; 
-						
-						            cout << "   "; 
-						            for (int k = 0; k < databaseBarang[i].sku.length(); k++) 
-						            {
-						                if (databaseBarang[i].sku[k] % 2 == 0) {
-						                    cout << "|||"; 
-						                } else {
-						                    cout << "|"; 
-						                }
-						            }
-						            cout << endl; 
-						            
-						            cout << "    * " << databaseBarang[i].sku << " *" << endl;
-						            cout << "\n==========================================" << endl;
-						            cout << "[?] Dokumen cetak berhasil di-generate." << endl;
-						                
-						            if (jumlahLog < 100) {
-						                databaseLog[jumlahLog++].infoLog = "Admin mencetak barcode untuk barang SKU: " + databaseBarang[i].sku;
-						            }
-						            break; 
-						        }
-						    } 
-						       
-						    if (!ketemuSku) {
-						        cout << "\n[X] Kode SKU tidak terdaftar di sistem. Gagal cetak barcode." << endl;
-						    }
-						} 
-						kembaliKeMenu();
-						break;
-					}
-					  
-				   	case 5:
-                    tetapDiMenuUtama = false; 
-                    cout << "\nMelakukan Logout..." << endl;
-                    cout << "Tekan ENTER untuk kembali ke halaman Login...";
-                    cin.ignore(); cin.get();
-                    break;
+                    }
                     
-					default:
-                    cout << "\nPilihan tidak valid!" << endl;
-                    kembaliKeMenu();
-                    break;  
+                    case 3:
+                    {
+                        clearScreen();
+                        cout << "--- [MENU 3] LOG RIWAYAT TRANSAKSI REAL-TIME (ADMIN) ---\n\n";
+                        tampilkanLogRapi(databaseLog, jumlahLog);
+                        kembaliKeMenu();
+                        break;
+                     } 
+                
+                    case 4:      
+                    {
+                        clearScreen();
+                        cout << "--- [MENU 4] PRINT BARCODE & LAPORAN ---" << endl;
+                        if (jumlahBarang == 0) 
+						{
+                            cout << "[X] Gudang kosong!" << endl;
+                        } else {
+                            string cariSku;
+                            cout << "Masukkan kode SKU barang: "; cin >> cariSku;
+                            bool ketemuSku = false;
+                        
+                            for (int i = 0; i < jumlahBarang; i++) 
+							{
+                                if (databaseBarang[i].sku == cariSku) 
+								{
+                                    ketemuSku = true;
+                                    cout << "\n==========================================" << endl;
+                                    cout << "        HASIL GENERATE BARCODE            " << endl;
+                                    cout << "==========================================" << endl;
+                                    cout << " Nama Barang : " << databaseBarang[i].nama << endl;
+                                    cout << " Kode SKU    : " << databaseBarang[i].sku << endl;
+                                    cout << " Tampilan Barcode: \n\n   "; 
+                                    
+                                    for (size_t k = 0; k < databaseBarang[i].sku.length(); k++) 
+									{
+                                        cout << ((databaseBarang[i].sku[k] % 2 == 0) ? "|||" : "|");
+                                    }
+                                    cout << "\n    * " << databaseBarang[i].sku << " *" << endl;
+                                    
+                                    if (jumlahLog < 100) {
+                                        databaseLog[jumlahLog++].infoLog = "Cetak Barcode SKU: " + databaseBarang[i].sku;
+                                    }
+                                    break; 
+                                }
+                            } 
+                            if (!ketemuSku) cout << "\n[X] Kode SKU tidak terdaftar." << endl;
+                        } 
+                        kembaliKeMenu();
+                        break;
+                    }
+                      
+                    case 5:
+                        tetapDiMenuUtama = false; 
+                        break;
+                    
+                    default:
+                        cout << "\nPilihan tidak valid!" << endl;
+                        kembaliKeMenu();
+                        break;  
                 }
-           	} 
+            } 
             else if (roleUserAktif == "STAFF") 
             {
                 switch (pilihanMenu)
                 {
                     case 1:
-					{
-					    clearScreen();
-					    cout << "--- [MENU 1] INFORMASI BARANG (STAFF) ---" << endl;
-					    
-					    if (jumlahBarang == 0) {
-					        cout << "[!] Belum ada data barang di gudang." << endl;
-					    } else {
-					        cout << "Nama Barang : " << databaseBarang[0].nama << endl;
-					        cout << "Kode SKU    : " << databaseBarang[0].sku << endl;
-					        cout << "Stok Saat Ini: " << databaseBarang[0].stok << " Unit" << endl;
-					    }
-					    
-					    kembaliKeMenu();
-					    break;
-					}
-					case 2:
+                    {
                         clearScreen();
-                        cout << "--- [MENU 2] LOG TRANSAKSI REAL-TIME (STAFF) ---" << endl;
-                        for (int i = 0; i < jumlahLog; i++) {
-                            cout << "[" << i+1 << "] " << databaseLog[i].infoLog << endl;
+                        cout << "--- [MENU 1] CARI BARANG / KODE SKU (STAFF) ---" << endl;
+                        if (jumlahBarang == 0) {
+                            cout << "[!] Belum ada data barang di gudang." << endl;
+                        } else {
+                            string cariSku;
+                            cout << "Masukkan Kode SKU yang dicari: "; cin >> cariSku;
+                            bool found = false;
+                            for(int i=0; i<jumlahBarang; i++) 
+							{
+                                if(databaseBarang[i].sku == cariSku) 
+								{
+                                    cout << "\nNama Barang   : " << databaseBarang[i].nama << endl;
+                                    cout << "Kode SKU      : " << databaseBarang[i].sku << endl;
+                                    cout << "Stok Saat Ini : " << databaseBarang[i].stok << " Unit" << endl;
+                                    cout << "Harga Modal   : Rp" << databaseBarang[i].harga << endl;
+                                    cout << "Harga Jual    : Rp" << databaseBarang[i].harga_jual << endl;
+                                    found = true; break;
+                                }
+                            }
+                            if(!found) cout << "[!] Barang tidak ditemukan." << endl;
                         }
-                        cout << "========================================================" << endl;
+                        kembaliKeMenu();
+                        break;
+                    }
+                    case 2:
+                        clearScreen();
+                        cout << "--- [MENU 2] LOG TRANSAKSI REAL-TIME (STAFF) ---\n\n";
+                        tampilkanLogRapi(databaseLog, jumlahLog);
                         kembaliKeMenu();
                         break;
                     
                     case 3:
                         tetapDiMenuUtama = false; 
-                        cout << "\nMelakukan Logout..." << endl;
-                        cout << "Tekan ENTER untuk kembali ke halaman Login...";
-                        cin.ignore(); cin.get();
                         break;
                 
-					default:
+                    default:
                         cout << "\nPilihan tidak valid!" << endl;
                         kembaliKeMenu();
                         break;  
