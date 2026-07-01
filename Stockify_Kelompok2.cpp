@@ -235,10 +235,11 @@ int main()
             if (roleUserAktif == "ADMIN")
             {
                 cout << "1. Kelola Stok Barang & Vendor (CRUD)" << endl;
-                cout << "2. Riwayat & Transaksi Barang" << endl;
-                cout << "3. Log Masuk-Keluar (Real-time)" << endl;
-                cout << "4. Cetak Barcode & Laporan" << endl;
-                cout << "5. Kembali ke Halaman Login (Logout)" << endl;
+                cout << "2. Cari Barang / Kode SKU" << endl;
+			    cout << "3. Riwayat & Transaksi Barang" << endl;
+                cout << "4. Log Masuk-Keluar (Real-time)" << endl;
+                cout << "5. Cetak Barcode & Laporan" << endl;
+                cout << "6. Kembali ke Halaman Login (Logout)" << endl;
             }
             else if (roleUserAktif == "STAFF")
             {
@@ -303,8 +304,7 @@ int main()
                         cout << "-> Harga Jual Otomatis Dihitung: Rp" << databaseBarang[jumlahBarang].harga_jual << endl;
 
                         if (jumlahLog < 98) {
-                            databaseLog[jumlahLog++].infoLog = "MASUK | Tambah Stok " + databaseBarang[jumlahBarang].nama + " | " + to_string(databaseBarang[jumlahBarang].stok) + " unit | Rp" + to_string(databaseBarang[jumlahBarang].harga * databaseBarang[jumlahBarang].stok);
-                            databaseLog[jumlahLog++].infoLog = "No Laporan: " + noLaporan + " , PJ: " + penanggungJawab + " , Tgl: " + tanggal;
+                            databaseLog[jumlahLog++].infoLog = "MASUK  |" + databaseBarang[jumlahBarang].nama + " | " + to_string(databaseBarang[jumlahBarang].stok) + " unit | Rp" + to_string(databaseBarang[jumlahBarang].harga * databaseBarang[jumlahBarang].stok);
                         }
 
                         jumlahBarang++;
@@ -343,13 +343,34 @@ int main()
                                 cout << "Masukkan Nama Vendor    : ";
                                 cin.ignore();
                                 getline(cin, namaVendor);
-
-                                while (namaVendor.empty() || namaVendor.find_first_not_of(' ') == string::npos) {
-                                    cout << "[!] Peringatan: Nama vendor tidak boleh kosong!\n";
-                                    cout << "Masukkan kembali Nama Vendor : ";
-                                    getline(cin, namaVendor);
-                                }
-
+								
+								bool valid = false;
+								while (!valid) {
+								    if (namaVendor.empty() || namaVendor.find_first_not_of(' ') == string::npos) {
+								        cout << "[!] Peringatan: Nama vendor tidak boleh kosong!\n" << endl;
+								    } 
+								    else {
+								        bool hanyaHuruf = true;
+								        for (char c : namaVendor) {
+								            if (!isalpha(c) && !isspace(c)) {
+								                hanyaHuruf = false;
+								                break;
+								            }
+								        }
+								
+								        if (!hanyaHuruf) {
+								            cout << "[!] Peringatan: Nama vendor hanya boleh mengandung huruf!\n" << endl;
+								        } else {
+								            valid = true;
+								        }
+								    }
+								
+								    if (!valid) {
+								        cout << "Masukkan kembali Nama Vendor : ";
+								        getline(cin, namaVendor);
+								    }
+								}
+						
                                 cout << "Masukkan Jumlah Diambil : "; cin >> jumlahAmbil;
 
                                 if (jumlahAmbil > databaseBarang[idx].stok)
@@ -368,9 +389,9 @@ int main()
                                     }
                                     cout << "\nBerhasil! Pengambilan dicatat. Sisa stok: " << databaseBarang[idx].stok << " Unit." << endl;
                                     
-                                    // LOGIKA PERUBAHAN: Batas minimum stok diganti ke 100 unit
-                                    if (databaseBarang[idx].stok <= 100) {
-                                        cout << "\n[PEMBERITAHUAN] Stok " << databaseBarang[idx].nama << " sekarang kritis Tersisa kurang dari 100 unit!\n";
+                                    // LOGIKA PERUBAHAN: Batas minimum stok diganti ke 10 unit
+                                    if (databaseBarang[idx].stok <= 10) {
+                                        cout << "\n[PEMBERITAHUAN] Stok " << databaseBarang[idx].nama << " sekarang kritis Tersisa kurang dari 10 unit!\n";
                                     }
                                 }
                             }
@@ -468,7 +489,7 @@ int main()
                         else {
                             for (int i = 0; i < jumlahBarang; i++) {
                             
-                                string statusStok = (tempBarang[i].stok <= 100) ? "[STOK MENIPIS]" : "Aman";
+                                string statusStok = (tempBarang[i].stok <= 10) ? "[STOK MENIPIS]" : "Aman";
                                 
                                 cout << left << setw(4) << (i + 1) << "| "
                                     << setw(12) << tempBarang[i].sku << "| "
@@ -484,18 +505,63 @@ int main()
                     }
                     break;
                 }
+				
+				case 2:
+				{
+					clearScreen();
+					cout << "--- [MENU 2] CARI BARANG / KODE SKU (ADMIN) ---" << endl;
+					
+					if (jumlahBarang == 0) {
+					    cout << "[!] Belum ada data barang di gudang." << endl;
+					} 
+					else {
+					    string cariSku;
+					    cout << "Masukkan Kode SKU yang dicari: "; 
+					    cin >> cariSku;
+					    
+					    bool found = false;
+					    for (int i = 0; i < jumlahBarang; i++) {
+					        if (databaseBarang[i].sku == cariSku) {
+					            cout << "\n--- DATA BARANG DITEMUKAN ---" << endl;
+					            cout << "Nama Barang   : " << databaseBarang[i].nama << endl;
+					            cout << "Kode SKU      : " << databaseBarang[i].sku << endl;
+					            cout << "Stok Saat Ini : " << databaseBarang[i].stok << " Unit ";
+					            
+					            // Peringatan stok untuk Admin
+					            if (databaseBarang[i].stok <= 10) {
+					                cout << "[!!! STOK KRITIS !!!]";
+					            }
+					            cout << endl;
+					
+					            cout << "Harga Modal   : Rp" << databaseBarang[i].harga << endl;
+					            cout << "Harga Jual    : Rp" << databaseBarang[i].harga_jual << endl;
+					            cout << "------------------------------" << endl;
+					            
+					            found = true; 
+					            break;
+					        }
+					    }
+					    
+					    if (!found) {
+					        cout << "[!] Barang dengan SKU " << cariSku << " tidak ditemukan." << endl;
+					    }
+					}
+					kembaliKeMenu();
+					break;
+				}
 
-                case 2:
-                {
+                case 3:
+				{
                     clearScreen();
+                    cout << "--- [MENU 3] LOG RIWAYAT TRANSAKSI REAL-TIME (ADMIN) ---" << endl << endl;
                     cout << "==========================================================" << endl;
                     cout << "NO | JENIS    | KETERANGAN         | HARGA (MASUK/KELUAR)" << endl;
                     cout << "==========================================================" << endl;
 
                     long totalPemasukan = 0, totalPengeluaran = 0;
                     int nomor = 1;
-
                     for (int i = 0; i < jumlahLog; i++)
+
                     {
                         if (databaseLog[i].infoLog.find("Rp") != string::npos)
                         {
@@ -508,6 +574,7 @@ int main()
                             if (sTemp.find("MASUK") != string::npos)
                             {
                                 totalPengeluaran += nilai;
+
                             }
                             else if (sTemp.find("KELUAR") != string::npos)
                             {
@@ -522,21 +589,21 @@ int main()
                     cout << "SALDO/KEUNTUNGAN BERSIH    : Rp" << (totalPemasukan - totalPengeluaran) << endl;
                     kembaliKeMenu();
                     break;
-                }
+				}
 
-                case 3:
+                case 4:
                 {
                     clearScreen();
-                    cout << "--- [MENU 3] LOG RIWAYAT TRANSAKSI REAL-TIME (ADMIN) ---\n\n";
+                    cout << "--- [MENU 4] LOG RIWAYAT TRANSAKSI REAL-TIME (ADMIN) ---\n\n";
                     tampilkanLogRapi(databaseLog, jumlahLog);
                     kembaliKeMenu();
                     break;
                 }
 
-                case 4:
+                case 5:
                 {
                     clearScreen();
-                    cout << "--- [MENU 4] PRINT BARCODE & LAPORAN ---" << endl;
+                    cout << "--- [MENU 5] PRINT BARCODE & LAPORAN ---" << endl;
                     if (jumlahBarang == 0)
                     {
                         cout << "[X] Gudang kosong!" << endl;
@@ -576,7 +643,7 @@ int main()
                     break;
                 }
 
-                case 5:
+                case 6:
                     tetapDiMenuUtama = false;
                     break;
 
@@ -609,8 +676,8 @@ int main()
                                 cout << "Kode SKU      : " << databaseBarang[i].sku << endl;
                                 cout << "Stok Saat Ini : " << databaseBarang[i].stok << " Unit ";
                                 
-                                // LOGIKA PERUBAHAN: Staff juga melihat warning jika stok <= 100
-                                if (databaseBarang[i].stok <= 100) cout << "[STOK MENIPIS]";
+                                // LOGIKA PERUBAHAN: Staff juga melihat warning jika stok <= 10
+                                if (databaseBarang[i].stok <= 10) cout << "[STOK MENIPIS]";
                                 cout << endl;
 
                                 cout << "Harga Modal   : Rp" << databaseBarang[i].harga << endl;
@@ -644,5 +711,3 @@ int main()
     }
     return 0;
 }
-
-
